@@ -1,0 +1,3 @@
+Warning[215] D:\DESIGNS\PIC\LCD\TUT3_4.ASM 4 : Processor superseded by command line.  Verify processor symbol.
+Message[301] C:\ARCHIVOS DE PROGRAMA\MICROCHIP\MPASM SUITE\P16F628.INC 35 : MESSAGE: (Processor-header file mismatch.  Verify selected processor.)
+Error[151]   D:\DESIGNS\PIC\LCD\TUT3_4.ASM 45 : Operand contains unresolvable labels or is too complex

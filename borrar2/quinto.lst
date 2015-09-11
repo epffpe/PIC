@@ -1,0 +1,67 @@
+MPASM  5.20                        QUINTO.ASM   10-19-2008  4:35:25         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001                         list    p=16f84a
+  00000006            00002 puertab         equ             0x06
+  00000003            00003 estado          equ             0x03
+  00000001            00004 tmr0_opt        equ             0x01
+  0000000B            00005 intcon          equ             0x0B
+0000                  00006                         org             0
+0000   1683           00007                         bsf             estado,5
+Warning[209]: Missing quote
+0001   30D6           00008                         movlw   b'11010110
+0002   0081           00009                         movwf   tmr0_opt
+0003   0186           00010                         clrf    puertab
+0004   1283           00011                         bcf             estado,5
+0005   0186           00012                         clrf    puertab
+                      00013                 
+0006   1786           00014 parpa           bsf     puertab,7
+0007   200B           00015                         call    retardo
+0008   1386           00016                         bcf     puertab,7
+0009   200B           00017                         call    retardo
+000A   2806           00018                         goto    parpa
+000B   307A           00019 retardo         movlw   0x7A
+000C   008C           00020                         movwf   0x0c
+000D   0181           00021 retardo2        clrf    tmr0_opt
+000E   1F01           00022 explora         btfss   tmr0_opt,6
+000F   280E           00023                         goto    explora
+Message[305]: Using default destination of 1 (file).
+0010   0B8C           00024                         decfsz  0x0c
+0011   280D           00025                         goto    retardo2
+0012   0008           00026                         return 
+                      00027                         end 
+MPASM  5.20                        QUINTO.ASM   10-19-2008  4:35:25         PAGE  2
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+__16F84A                          00000001
+estado                            00000003
+explora                           0000000E
+intcon                            0000000B
+parpa                             00000006
+puertab                           00000006
+retardo                           0000000B
+retardo2                          0000000D
+tmr0_opt                          00000001
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : XXXXXXXXXXXXXXXX XXX------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:    19
+Program Memory Words Free:  1005
+
+
+Errors   :     0
+Warnings :     1 reported,     0 suppressed
+Messages :     1 reported,     0 suppressed
+
+

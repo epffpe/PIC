@@ -1,0 +1,68 @@
+;Este programa hace que un mensaje circule en la pantalla
+;de un modulo lcd			;p=16f84a, osc=xt, wdt=off
+indf	equ		0h		;para direccionamiento indirecto
+tmr0	equ		1h
+pc		equ		2h
+status	equ		3h
+fsr		equ		4h
+ptoa	equ		5h
+ptob	equ		6h
+r0c		equ		0ch
+r0d		equ		0dh
+r13		equ		13h
+z		equ		2h
+c		equ		0h
+w		equ		0h
+r		equ		1h
+e		equ		1h
+rs		equ		0h
+
+		org		00
+		goto 	inicio
+		
+retardo movlw	0fh
+		movwf	r13
+decre	decfsz	r13,r
+		goto 	decre
+		retlw	0
+		
+control	bcf		ptoa,rs
+		goto	dato2
+dato	bsf		ptoa,rs
+dato2	bsf		ptoa,e
+		movwf	ptob
+		call	retardo
+		bcf		ptoa,e
+		call	retardo
+		retlw	0
+		
+tabla	addwf	pc,r
+		rtlw	"H"
+		rtlw	"o"
+		rtlw	"l"
+		rtlw	"a"
+		rtlw	" "
+		rtlw	"E"
+		rtlw	"s"
+		rtlw	"t"
+		rtlw	"o"
+		rtlw	" "
+		rtlw	"e"
+		rtlw	"s"
+		rtlw	" "
+		rtlw	"u"
+		rtlw	"n"
+		rtlw	"a"
+		rtlw	" "
+		rtlw	"P"
+		rtlw	"r"
+		rtlw	"u"
+		rtlw	"e"
+		rtlw	"v"
+		rtlw	"a"
+		rtlw	"0"
+		
+inicio	movlw	fch
+		tris	ptoa
+		movlw	
+				

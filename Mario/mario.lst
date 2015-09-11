@@ -1,0 +1,66 @@
+MPASM  5.14                         MARIO.ASM   4-8-2009  16:26:57         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+  00000002            00001 pc              equ             0x02
+  00000003            00002 status  equ                     0x03
+  00000005            00003 ptoa    equ                     0x05
+  00000006            00004 ptob    equ                     0x06
+  00000005            00005 trisa   equ                     0x05
+  00000006            00006 trisb   equ                     0x06
+  00000000            00007 w               equ                     0x00
+  00000005            00008 RP0             equ                     5
+                      00009 
+0000                  00010 reset   org                     0
+0000   2805           00011                 goto            inicio
+                      00012                                         
+0005                  00013                 org                     5
+0005   1683           00014 inicio  bsf                     status,RP0
+0006   3000           00015                 movlw           00h
+0007   0085           00016                 movwf           trisa
+0008   30FF           00017                 movlw           0xff
+0009   0086           00018         movwf           trisb
+000A   1283           00019         bcf                     status,RP0
+                      00020 
+000B   0806           00021 ciclo   movf            ptob,w
+000C   3AFF           00022                 xorlw           0xff
+000D   0085           00023                 movwf           ptoa
+000E   280B           00024                 goto            ciclo
+                      00025                 END
+MPASM  5.14                         MARIO.ASM   4-8-2009  16:26:57         PAGE  2
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RP0                               00000005
+__16F84A                          00000001
+ciclo                             0000000B
+inicio                            00000005
+pc                                00000002
+ptoa                              00000005
+ptob                              00000006
+reset                             00000000
+status                            00000003
+trisa                             00000005
+trisb                             00000006
+w                                 00000000
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : X----XXXXXXXXXX- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:    11
+Program Memory Words Free:  1013
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+

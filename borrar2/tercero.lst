@@ -1,0 +1,58 @@
+MPASM  5.20                       TERCERO.ASM   10-18-2008  1:03:43         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001                 list p=16f84a
+  00000005            00002 puertaa equ             0x05
+  00000006            00003 puertab equ             0x06
+  00000003            00004 estado  equ             0x03
+  0000000C            00005 suma    equ             0x0c
+  00000000            00006 w               equ             0
+0000                  00007                 org             0
+0000   1683           00008                 bsf             estado,5
+0001   300F           00009                 movlw   0x0f
+0002   0085           00010                 movwf   puertaa
+0003   300F           00011                 movlw   0x0f
+0004   0086           00012                 movwf   puertab
+0005   1283           00013                 bcf             estado,5
+0006   0805           00014 inicio  movf    puertaa,w
+0007   390F           00015                 andlw   0x0f
+0008   008C           00016                 movwf   suma
+0009   0806           00017                 movf    puertab,w
+000A   390F           00018                 andlw   0x0f
+000B   078C           00019                 addwf   suma,1
+000C   2806           00020                 goto    inicio
+                      00021                 end
+MPASM  5.20                       TERCERO.ASM   10-18-2008  1:03:43         PAGE  2
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+__16F84A                          00000001
+__DEBUG                           1
+estado                            00000003
+inicio                            00000006
+puertaa                           00000005
+puertab                           00000006
+suma                              0000000C
+w                                 00000000
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : XXXXXXXXXXXXX--- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:    13
+Program Memory Words Free:  1011
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+

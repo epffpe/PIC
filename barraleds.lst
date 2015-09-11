@@ -1,0 +1,65 @@
+MPASM  5.20                     BARRALEDS.ASM   10-13-2008  0:54:12         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001                         list p=16f84
+  00000002            00002 pc                      equ 02h
+  00000003            00003 status          equ     03h
+  00000005            00004 ptoa            equ     05h
+  00000006            00005 ptob            equ     06h
+  00000085            00006 trisa           equ     85h
+  00000086            00007 trisb           equ 86h
+  00000000            00008 w                       equ 00h
+0000                  00009 reset           org             0
+0000   2805           00010                         goto    inicio
+0005                  00011                         org             5
+0005   1683           00012 inicio          bsf             status,5
+0006   30F0           00013                         movlw   0f0h
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0007   0085           00014                         movwf   trisa
+0008   30FF           00015                         movlw   0ffh
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0009   0086           00016                         movwf   trisb
+000A   1283           00017                         bcf             status,5                
+000B   0806           00018 ciclo           movf    ptob,w
+000C   3AFF           00019                         xorlw   0ffh
+000D   0085           00020                         movwf   ptoa
+000E   280B           00021                         goto    ciclo
+                      00022                         end
+MPASM  5.20                     BARRALEDS.ASM   10-13-2008  0:54:12         PAGE  2
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+__16F84A                          00000001
+__DEBUG                           1
+ciclo                             0000000B
+inicio                            00000005
+pc                                00000002
+ptoa                              00000005
+ptob                              00000006
+reset                             00000000
+status                            00000003
+trisa                             00000085
+trisb                             00000086
+w                                 00000000
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : X----XXXXXXXXXX- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:    11
+Program Memory Words Free:  1013
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     2 reported,     0 suppressed
+
+

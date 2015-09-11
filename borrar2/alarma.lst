@@ -1,0 +1,90 @@
+MPASM  5.20                        ALARMA.ASM   10-19-2008  14:11:53         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001                 list    p=16f84a
+                      00002                 radix   hex
+  00000000            00003 w               equ     0
+  00000001            00004 f               equ     1
+  00000003            00005 estado  equ     0x03
+  00000005            00006 puertaa equ     0x05
+  00000006            00007 puertab equ     0x06
+  0000000B            00008 intcon  equ     0x0B
+                      00009 
+0000                  00010                 org             0
+0000   2805           00011                 goto    inicio
+                      00012                 
+0004                  00013                 org             4
+0004   280F           00014                 goto    inter
+                      00015 
+0005                  00016                 org             5
+0005   1683           00017 inicio  bsf             estado,5
+0006   0185           00018                 clrf    puertaa
+0007   30FF           00019                 movlw   0xff
+0008   0086           00020                 movwf   puertab
+0009   1283           00021                 bcf             estado,5
+                      00022 
+000A   0185           00023                 clrf    puertaa
+000B   0186           00024                 clrf    puertab
+                      00025 
+000C   3098           00026                 movlw   b'10011000'
+000D   008B           00027                 movwf   intcon
+000E   280E           00028 bucle   goto    bucle
+                      00029 
+000F   1C0B           00030 inter   btfss   intcon,0        ;flag de int por cambio de RB4 RB7
+0010   281B           00031                 goto    parar
+0011   0186           00032 alarma  clrf    puertab
+0012   3098           00033                 movlw   b'10011000'
+0013   008B           00034                 movwf   intcon
+0014   1405           00035 buzzer  bsf             puertaa,0
+0015   0000           00036                 nop
+0016   1005           00037                 bcf             puertaa,0
+0017   1485           00038                 bsf             puertaa,1
+0018   0000           00039                 nop
+0019   1085           00040                 bcf             puertaa,1
+001A   2814           00041                 goto    buzzer
+                      00042 
+001B   0185           00043 parar   clrf    puertaa
+001C   1006           00044                 bcf             puertab,0
+001D   3098           00045                 movlw   b'10011000'
+001E   008B           00046                 movwf   intcon
+001F   280E           00047                 goto    bucle
+                      00048                 end
+MPASM  5.20                        ALARMA.ASM   10-19-2008  14:11:53         PAGE  2
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+__16F84A                          00000001
+alarma                            00000011
+bucle                             0000000E
+buzzer                            00000014
+estado                            00000003
+f                                 00000001
+inicio                            00000005
+intcon                            0000000B
+inter                             0000000F
+parar                             0000001B
+puertaa                           00000005
+puertab                           00000006
+w                                 00000000
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:    29
+Program Memory Words Free:   995
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+

@@ -1,0 +1,68 @@
+MPASM  5.20                        CUARTO.ASM   10-18-2008  1:22:43         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001                 list p=16f84a
+  00000005            00002 puertaa equ             0x05
+  00000006            00003 puertab equ             0x06
+  00000003            00004 estado  equ             0x03
+  0000000C            00005 suma    equ             0x0c
+  00000000            00006 w               equ             0
+  00000001            00007 f               equ             1
+  0000000C            00008 conta   equ             0x0c
+                      00009 
+0000                  00010                 org             0
+0000   2805           00011                 goto    inicio
+0005                  00012                 org     5
+0005   1683           00013 inicio  bsf             estado,5
+0006   3000           00014                 movlw   0x00
+0007   0086           00015                 movwf   puertab
+0008   1283           00016                 bcf             estado,5
+                      00017 
+0009   018C           00018                 clrf    conta
+000A   0A8C           00019 bucle1  incf    conta,f
+000B   080C           00020                 movf    conta,w
+000C   0086           00021                 movwf   puertab
+000D   305F           00022                 movlw   0x5f
+000E   020C           00023                 subwf   conta,w
+000F   1D03           00024                 btfss   estado,2
+0010   280A           00025                 goto    bucle1
+0011   2811           00026 bucle2  goto    bucle2
+                      00027                 end
+MPASM  5.20                        CUARTO.ASM   10-18-2008  1:22:43         PAGE  2
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+__16F84A                          00000001
+__DEBUG                           1
+bucle1                            0000000A
+bucle2                            00000011
+conta                             0000000C
+estado                            00000003
+f                                 00000001
+inicio                            00000005
+puertaa                           00000005
+puertab                           00000006
+suma                              0000000C
+w                                 00000000
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : X----XXXXXXXXXXX XX-------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:    14
+Program Memory Words Free:  1010
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+

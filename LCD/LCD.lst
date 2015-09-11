@@ -1,0 +1,322 @@
+MPASM  5.20                           LCD.ASM   9-4-2009  14:55:30         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;Este programa hace que un mensaje circule en la pantalla
+                      00002 ;de un modulo lcd                       ;p=16f84a, osc=xt, wdt=off
+                      00003         ;LIST   p=16F84A                ;tell assembler what chip we are using
+                      00004         ;include "P16F84A.inc"
+  00000000            00005 indf    equ             0h              ;para direccionamiento indirecto
+  00000001            00006 tmr0    equ             1h
+  00000002            00007 pc              equ             2h
+  00000003            00008 status  equ             3h
+  00000005            00009 rp0     equ             5h
+  00000004            00010 fsr             equ             4h
+  00000005            00011 ptoa    equ             5h
+  00000006            00012 ptob    equ             6h
+  0000000C            00013 r0c             equ             0ch
+  0000000D            00014 r0d             equ             0dh
+  00000013            00015 r13             equ             13h
+  00000014            00016 r14             equ             14h
+  00000002            00017 z               equ             2h
+  00000000            00018 c               equ             0h
+  00000000            00019 w               equ             0h
+  00000001            00020 r               equ             1h
+  00000001            00021 e               equ             1h
+  00000000            00022 rs              equ             0h
+                      00023                 cblock  0x20                    ;start of general purpose registers
+  00000020            00024                         count                   ;used in looping routines
+  00000021            00025                         count1                  ;used in delay routine
+  00000022            00026                         counta                  ;used in delay routine
+  00000023            00027                         countb                  ;used in delay routine
+  00000024            00028                         tmp1                    ;temporary storage
+  00000025            00029                         tmp2
+  00000026            00030                         templcd                 ;temp store for 4 bit mode
+  00000027            00031                         templcd2        
+                      00032                 endc
+                      00033 
+0000                  00034                 org             00
+0000   2867           00035                 goto    inicio
+                      00036 
+0001   300D           00037 ret40u  movlw   0x0D
+0002   2804           00038                 goto    sig                             
+0003   3021           00039 ret100u movlw   0x21
+0004   0093           00040 sig             movwf   r13
+0005   0B93           00041 decre   decfsz  r13,r
+0006   2805           00042                 goto    decre
+0007   3400           00043                 retlw   0
+                      00044 
+0008   300F           00045 ret15ms movlw   0x0f
+0009   280D           00046                 goto    cuenta
+000A   3001           00047 retardo movlw   0x01
+000B   280D           00048                 goto    cuenta
+000C   3005           00049 ret4ms  movlw   5h
+000D   0094           00050 cuenta  movwf   r14
+000E   30FF           00051 decre2  movlw   0xff
+000F   0093           00052                 movwf   r13
+0010   0B93           00053 decre1  decfsz  r13,r
+MPASM  5.20                           LCD.ASM   9-4-2009  14:55:30         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0011   2810           00054                 goto    decre1
+0012   0B94           00055                 decfsz  r14,r
+0013   280E           00056                 goto    decre2
+0014   3400           00057                 retlw   0
+                      00058 ;----------------------------------------------------
+0015   30FF           00059 Delay255        movlw   0xff            ;delay 255 mS
+0016   281E           00060                 goto    d0
+0017   3064           00061 Delay100        movlw   d'100'          ;delay 100mS
+0018   281E           00062                 goto    d0
+0019   3032           00063 Delay50         movlw   d'50'           ;delay 50mS
+001A   281E           00064                 goto    d0
+001B   3014           00065 Delay20         movlw   d'20'           ;delay 20mS
+001C   281E           00066                 goto    d0
+001D   3005           00067 Delay5          movlw   0x05            ;delay 5.000 ms (4 MHz clock)
+001E   00A1           00068 d0              movwf   count1
+001F   30C7           00069 d1              movlw   0xC7                    ;delay 1mS
+0020   00A2           00070                 movwf   counta
+0021   3001           00071                 movlw   0x01
+0022   00A3           00072                 movwf   countb
+0023                  00073 Delay_0
+0023   0BA2           00074                 decfsz  counta, f
+0024   2826           00075                 goto    $+2
+0025   0BA3           00076                 decfsz  countb, f
+0026   2823           00077                 goto    Delay_0
+                      00078 
+0027   0BA1           00079                 decfsz  count1  ,f
+0028   281F           00080                 goto    d1
+0029   3400           00081                 retlw   0x00
+                      00082 ;-------------------------------------------------------------------
+002A                  00083 LCD_Cmd ;movwf  templcd
+                      00084                 ;swapf  templcd,        w       ;send upper nibble
+                      00085                 ;andlw  0x0f                    ;clear upper 4 bits of W
+002A   0086           00086                 movwf   ptob
+002B   1005           00087                 bcf             ptoa, rs        ;RS line to 0
+002C   2035           00088                 call    Pulse_e                 ;Pulse the E line high
+                      00089 
+                      00090                 ;movf   templcd,        w       ;send lower nibble
+                      00091                 ;andlw  0x0f                    ;clear upper 4 bits of W
+                      00092                 ;movwf  LCD_PORT
+                      00093                 ;bcf            LCD_PORT, LCD_RS        ;RS line to 0
+                      00094                 ;call   Pulse_e                 ;Pulse the E line high
+002D   201D           00095                 call    Delay5
+002E   3400           00096                 retlw   0x00
+002F   3E30           00097 LCD_CharD       addlw   0x30
+0030                  00098 LCD_Char        ;movwf  templcd
+                      00099                 ;swapf  templcd,        w       ;send upper nibble
+                      00100                 ;andlw  0x0f                    ;clear upper 4 bits of W
+0030   0086           00101                 movwf   ptob
+0031   1405           00102                 bsf             ptoa,rs ;RS line to 1
+0032   2035           00103                 call    Pulse_e                 ;Pulse the E line high
+                      00104 
+                      00105                 ;movf   templcd,        w       ;send lower nibble
+                      00106                 ;andlw  0x0f                    ;clear upper 4 bits of W
+MPASM  5.20                           LCD.ASM   9-4-2009  14:55:30         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00107                 ;movwf  LCD_PORT
+                      00108                 ;bsf    LCD_PORT, LCD_RS        ;RS line to 1
+                      00109                 ;call   Pulse_e                 ;Pulse the E line high
+0033   201D           00110                 call    Delay5
+0034   3400           00111                 retlw   0x00
+                      00112 
+0035   1485           00113 Pulse_e bsf             ptoa, e
+0036   0000           00114                 nop
+0037   1085           00115                 bcf             ptoa, e
+0038   3400           00116                 retlw   0x00
+                      00117 
+                      00118 ;end of LCD routines
+                      00119                 
+0039   1005           00120 control bcf             ptoa,rs
+003A   283C           00121                 goto    dato2
+003B   1405           00122 dato    bsf             ptoa,rs
+003C   0086           00123 dato2   movwf   ptob
+003D   1485           00124                 bsf             ptoa,e
+                      00125                 ;call   retardo
+003E   1085           00126                 bcf             ptoa,e
+                      00127                 ;call   retardo
+003F   3400           00128                 retlw   0
+                      00129                 
+0040   0782           00130 tabla2  addwf   pc,r
+0041   3448           00131                 retlw   "H"
+0042   346F           00132                 retlw   "o"
+0043   346C           00133                 retlw   "l"
+0044   3461           00134                 retlw   "a"
+0045   3420           00135                 retlw   " "
+0046   3445           00136                 retlw   "E"
+0047   3473           00137                 retlw   "s"
+0048   3474           00138                 retlw   "t"
+0049   346F           00139                 retlw   "o"
+004A   3420           00140                 retlw   " "
+004B   3465           00141                 retlw   "e"
+004C   3473           00142                 retlw   "s"
+004D   3420           00143                 retlw   " "
+004E   3475           00144                 retlw   "u"
+004F   346E           00145                 retlw   "n"
+0050   3461           00146                 retlw   "a"
+0051   3420           00147                 retlw   " "
+0052   3450           00148                 retlw   "P"
+0053   3472           00149                 retlw   "r"
+0054   3475           00150                 retlw   "u"
+0055   3465           00151                 retlw   "e"
+0056   3476           00152                 retlw   "v"
+0057   3461           00153                 retlw   "a"
+0058   3420           00154                 retlw   " "
+0059   3420           00155                 retlw   " "
+005A   3420           00156                 retlw   " "
+005B   3420           00157                 retlw   " "
+005C   3420           00158                 retlw   " "
+005D   3420           00159                 retlw   " "
+MPASM  5.20                           LCD.ASM   9-4-2009  14:55:30         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+005E   3420           00160                 retlw   " "
+005F   3420           00161                 retlw   " "
+0060   3420           00162                 retlw   " "
+0061   3420           00163                 retlw   " "
+0062   3420           00164                 retlw   " "
+0063   3420           00165                 retlw   " "
+0064   3420           00166                 retlw   " "
+0065   3420           00167                 retlw   " "
+0066   3430           00168                 retlw   "0"
+                      00169 
+                      00170                 
+0067   1683           00171 inicio  bsf             status,rp0
+0068   3000           00172                 movlw   0x00
+0069   0085           00173                 movwf   ptoa
+006A   0086           00174                 movwf   ptob
+006B   1283           00175                 bcf             status,rp0
+006C   0185           00176                 clrf    ptoa
+006D   0186           00177                 clrf    ptob
+006E   2017           00178 begin   call    Delay100
+006F   3038           00179                 movlw   38h                     ;inicia display a 8bits 
+0070   202A           00180                 call    LCD_Cmd
+0071   201D           00181                 call    Delay5  
+0072   3038           00182                 movlw   38h                     ;inicia display a 8bits 
+0073   202A           00183                 call    LCD_Cmd
+                      00184                 ;call   ret100u
+0074   3038           00185                 movlw   38h                     ;selecciona modo desplazamiento
+0075   202A           00186                 call    LCD_Cmd
+0076   300C           00187                 movlw   0ch                     ;activa display
+0077   202A           00188                 call    LCD_Cmd
+0078   3001           00189                 movlw   01h                     ;
+0079   202A           00190                 call    LCD_Cmd
+007A   201D           00191                 call    Delay5
+007B   3000           00192 muestra movlw   0                       ;inicia el envio de caracteres
+007C   008C           00193                 movwf   r0c                     ;al modulo
+007D   080C           00194 ciclo   movf    r0c,w           ;hace barrido de la tabla
+007E   2040           00195                 call    tabla2
+007F   2030           00196                 call    LCD_Char
+0080   309F           00197                 movlw   09fh            ;retardo entre caracteres
+0081   008D           00198                 movwf   r0d
+0082   200A           00199 reta1   call    retardo
+0083   200A           00200                 call    retardo
+0084   0B8D           00201                 decfsz  r0d,r
+0085   2882           00202                 goto    reta1
+0086   0A8C           00203                 incf    r0c,r           ;sigue con el proximo carcater del mensaje
+0087   3017           00204                 movlw   17h
+0088   060C           00205                 xorwf   r0c,w           ;pregunta si termino el mensaje para volver
+0089   1D03           00206                 btfss   status,z        ;a empezar
+008A   287D           00207                 goto    ciclo
+008B   287B           00208                 goto    muestra
+                      00209                 end
+MPASM  5.20                           LCD.ASM   9-4-2009  14:55:30         PAGE  5
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+Delay100                          00000017
+Delay20                           0000001B
+Delay255                          00000015
+Delay5                            0000001D
+Delay50                           00000019
+Delay_0                           00000023
+LCD_Char                          00000030
+LCD_CharD                         0000002F
+LCD_Cmd                           0000002A
+Pulse_e                           00000035
+__16F84A                          00000001
+begin                             0000006E
+c                                 00000000
+ciclo                             0000007D
+control                           00000039
+count                             00000020
+count1                            00000021
+counta                            00000022
+countb                            00000023
+cuenta                            0000000D
+d0                                0000001E
+d1                                0000001F
+dato                              0000003B
+dato2                             0000003C
+decre                             00000005
+decre1                            00000010
+decre2                            0000000E
+e                                 00000001
+fsr                               00000004
+indf                              00000000
+inicio                            00000067
+muestra                           0000007B
+pc                                00000002
+ptoa                              00000005
+ptob                              00000006
+r                                 00000001
+r0c                               0000000C
+r0d                               0000000D
+r13                               00000013
+r14                               00000014
+ret100u                           00000003
+ret15ms                           00000008
+ret40u                            00000001
+ret4ms                            0000000C
+reta1                             00000082
+retardo                           0000000A
+rp0                               00000005
+rs                                00000000
+sig                               00000004
+status                            00000003
+tabla2                            00000040
+templcd                           00000026
+templcd2                          00000027
+MPASM  5.20                           LCD.ASM   9-4-2009  14:55:30         PAGE  6
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+tmp1                              00000024
+tmp2                              00000025
+tmr0                              00000001
+w                                 00000000
+z                                 00000002
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXX---- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:   140
+Program Memory Words Free:   884
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+

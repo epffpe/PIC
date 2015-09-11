@@ -1,0 +1,55 @@
+MPASM  5.20                       SEGUNDO.ASM   10-17-2008  23:04:23         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001                         list p=16f84
+                      00002                         Radix Hex
+  00000005            00003 puertaa         equ             0x05
+  00000006            00004 puertab         equ             0x06
+  00000003            00005 estado          equ             0x03
+  00000000            00006 w                       equ             0
+                      00007 
+0000                  00008                         ORG             0
+0000   1683           00009                         bsf             estado, 5
+0001   30FF           00010                         movlw   0xff
+0002   0085           00011                         movwf   puertaa
+0003   3000           00012                         movlw   0x00
+0004   0086           00013                         movwf   puertab
+0005   1283           00014                         bcf             estado, 5
+0006   0805           00015 inicio          movf    puertaa,w
+0007   3E02           00016                         addlw   2
+0008   0086           00017                         movwf   puertab
+0009   2806           00018                         goto    inicio
+                      00019                         end
+MPASM  5.20                       SEGUNDO.ASM   10-17-2008  23:04:23         PAGE  2
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+__16F84A                          00000001
+__DEBUG                           1
+estado                            00000003
+inicio                            00000006
+puertaa                           00000005
+puertab                           00000006
+w                                 00000000
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : XXXXXXXXXX------ ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:    10
+Program Memory Words Free:  1014
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+

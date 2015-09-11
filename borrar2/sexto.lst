@@ -1,0 +1,109 @@
+MPASM  5.20                         SEXTO.ASM   10-18-2008  4:18:28         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001                 list p=16f84a
+  00000000            00002 w               equ             0
+  00000001            00003 f               equ             1
+  00000001            00004 tmr_opt equ             0x01
+  00000003            00005 estado  equ             0x03
+  00000005            00006 puertaa equ             0x05
+  00000006            00007 puertab equ             0x06
+  0000000B            00008 intcon  equ             0x0b
+  00000010            00009 conta   equ             0x10
+0000                  00010                 org     0
+0000   2805           00011                 goto    inicio
+0004                  00012                 org             4
+0004   281D           00013                 goto    inter
+0005                  00014                 org 5
+0005   1683           00015 inicio  bsf             estado,5
+0006   0186           00016                 clrf    puertab
+0007   3003           00017                 movlw   b'00000011'
+0008   0085           00018                 movwf   puertaa
+0009   3007           00019                 movlw   b'00000111'
+000A   0081           00020                 movwf   tmr_opt
+000B   1283           00021                 bcf             estado,5
+000C   30A0           00022                 movlw   b'10100000'     ;interrupc tmr0 y GIE
+000D   008B           00023                 movwf   intcon
+000E   3010           00024                 movlw   0x10
+000F   0090           00025                 movwf   conta
+0010   300C           00026                 movlw   0x0c
+0011   0081           00027                 movwf   tmr_opt
+0012   1805           00028 bucle   btfsc   puertaa,0
+0013   2816           00029                 goto    ra0_1
+0014   1006           00030                 bcf             puertab,0
+0015   2817           00031                 goto    ra1x
+0016   1406           00032 ra0_1   bsf             puertab,0
+0017   1885           00033 ra1x    btfsc   puertaa,1
+0018   281B           00034                 goto    ra1_1
+0019   1086           00035                 bcf             puertab,1
+001A   281C           00036                 goto    bucle2
+001B   1486           00037 ra1_1   bsf             puertab,1
+001C   2812           00038 bucle2  goto    bucle
+                      00039 
+001D   0B90           00040 inter   decfsz  conta,1
+001E   2826           00041                 goto    seguir
+001F   3010           00042 conta_0 movlw   0x10
+0020   0090           00043                 movwf   conta
+0021   1B86           00044                 btfsc   puertab,7
+0022   2825           00045                 goto    rb7_1
+0023   1786           00046                 bsf             puertab,7
+0024   2826           00047                 goto    seguir
+0025   1386           00048 rb7_1   bcf             puertab,7
+0026   30A0           00049 seguir  movlw   b'10100000'
+0027   008B           00050                 movwf   intcon
+0028   300C           00051                 movlw   0x0c
+0029   0081           00052                 movwf   tmr_opt
+002A   0009           00053                 retfie
+MPASM  5.20                         SEXTO.ASM   10-18-2008  4:18:28         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00054                 end
+MPASM  5.20                         SEXTO.ASM   10-18-2008  4:18:28         PAGE  3
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+__16F84A                          00000001
+__DEBUG                           1
+bucle                             00000012
+bucle2                            0000001C
+conta                             00000010
+conta_0                           0000001F
+estado                            00000003
+f                                 00000001
+inicio                            00000005
+intcon                            0000000B
+inter                             0000001D
+puertaa                           00000005
+puertab                           00000006
+ra0_1                             00000016
+ra1_1                             0000001B
+ra1x                              00000017
+rb7_1                             00000025
+seguir                            00000026
+tmr_opt                           00000001
+w                                 00000000
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXX----- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:    40
+Program Memory Words Free:   984
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :     0 reported,     0 suppressed
+
+

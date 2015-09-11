@@ -1,0 +1,627 @@
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ;LCD 16 bit counter
+                      00002 ;Nigel Goodwin 2002
+                      00003 
+Warning[215]: Processor superseded by command line.  Verify processor symbol.
+                      00004         LIST    p=16F628                ;tell assembler what chip we are using
+                      00005         include "P16F628.inc"           ;include the defaults for the chip
+                      00001         LIST
+                      00002 ; P16F628.INC  Standard Header File, Version 1.01    Microchip Technology, Inc.
+Message[301]: MESSAGE: (Processor-header file mismatch.  Verify selected processor.)
+                      00261         LIST
+                      00006         ERRORLEVEL      0,      -302    ;suppress bank selection messages
+2007   3D18           00007         __config 0x3D18                 ;sets the configuration settings (oscillator type etc.)
+                      00008 
+                      00009 
+                      00010 
+                      00011 
+                      00012                 cblock  0x20                    ;start of general purpose registers
+  00000020            00013                         count                   ;used in looping routines
+  00000021            00014                         count1                  ;used in delay routine
+  00000022            00015                         counta                  ;used in delay routine
+  00000023            00016                         countb                  ;used in delay routine
+  00000024            00017                         tmp1                    ;temporary storage
+  00000025            00018                         tmp2
+  00000026            00019                         templcd                 ;temp store for 4 bit mode
+  00000027            00020                         templcd2
+                      00021 
+  00000028            00022                         NumL                    ;Binary inputs for decimal convert routine
+  00000029            00023                         NumH    
+                      00024 
+  0000002A            00025                         TenK                    ;Decimal outputs from convert routine
+  0000002B            00026                         Thou    
+  0000002C            00027                         Hund    
+  0000002D            00028                         Tens    
+  0000002E            00029                         Ones    
+                      00030                 endc
+                      00031 
+  00000005            00032 LCD_PORT        Equ     PORTA
+  00000085            00033 LCD_TRIS        Equ     TRISA
+  00000004            00034 LCD_RS          Equ     0x04                    ;LCD handshake lines
+  00000006            00035 LCD_RW          Equ     0x06
+  00000007            00036 LCD_E           Equ     0x07
+                      00037 
+                      00038                 org     0x0000
+                      00039 
+0000   3007           00040                 movlw   0x07
+0001   009F           00041                 movwf   CMCON                   ;turn comparators off (make it like a 16F84)
+                      00042 
+0002   01A0           00043 Initialise      clrf    count
+0003   0185           00044                 clrf    PORTA
+0004   0186           00045                 clrf    PORTB
+0005   01A8           00046                 clrf    NumL
+0006   01A9           00047                 clrf    NumH
+                      00048 
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00049 
+                      00050 
+0007   1683           00051 SetPorts        bsf     STATUS,         RP0     ;select bank 1
+0008   3000           00052                 movlw   0x00                    ;make all pins outputs
+0009   0085           00053                 movwf   LCD_TRIS
+000A   1283           00054                 bcf     STATUS,         RP0     ;select bank 0
+                      00055 
+000B   2???           00056                 call    LCD_Init                ;setup LCD
+                      00057 
+                      00058 
+000C   01A0           00059                 clrf    count                   ;set counter register to zero
+000D   0820           00060 Message         movf    count, w                ;put counter value in W
+000E   2???           00061                 call    Text                    ;get a character from the text table
+000F   3A00           00062                 xorlw   0x00                    ;is it a zero?
+0010   1903           00063                 btfsc   STATUS, Z
+0011   2???           00064                 goto    NextMessage
+0012   2???           00065                 call    LCD_Char
+0013   0AA0           00066                 incf    count, f
+0014   2???           00067                 goto    Message
+                      00068 
+0015   2???           00069 NextMessage     call    LCD_Line2               ;move to 2nd row, first column
+                      00070         
+0016   2???           00071                 call    Convert                 ;convert to decimal
+0017   082A           00072                 movf    TenK,   w               ;display decimal characters
+0018   2???           00073                 call    LCD_CharD               ;using LCD_CharD to convert to ASCII
+0019   082B           00074                 movf    Thou,   w
+001A   2???           00075                 call    LCD_CharD
+001B   082C           00076                 movf    Hund,   w
+001C   2???           00077                 call    LCD_CharD               
+001D   082D           00078                 movf    Tens,   w
+001E   2???           00079                 call    LCD_CharD
+001F   082E           00080                 movf    Ones,   w
+0020   2???           00081                 call    LCD_CharD
+0021   3020           00082                 movlw   ' '                     ;display a 'space'
+0022   2???           00083                 call    LCD_Char
+0023   0829           00084                 movf    NumH,   w               ;and counter in hexadecimal
+0024   2???           00085                 call    LCD_HEX
+0025   0828           00086                 movf    NumL,   w
+0026   2???           00087                 call    LCD_HEX
+0027   0FA8           00088                 incfsz  NumL,   f
+0028   2???           00089                 goto    Next
+0029   0AA9           00090                 incf    NumH,   f
+002A   2???           00091 Next            call    Delay255                ;wait so you can see the digits change
+002B   2???           00092                 goto    NextMessage
+                      00093 
+                      00094 
+                      00095 ;Subroutines and text tables
+                      00096 
+                      00097 ;LCD routines
+                      00098 
+                      00099 ;Initialise LCD
+002C   2???           00100 LCD_Init        call    Delay100                ;wait for LCD to settle
+                      00101 
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+002D   3020           00102                 movlw   0x20                    ;Set 4 bit mode
+002E   2???           00103                 call    LCD_Cmd
+                      00104 
+002F   3028           00105                 movlw   0x28                    ;Set display shift
+0030   2???           00106                 call    LCD_Cmd
+                      00107 
+0031   3006           00108                 movlw   0x06                    ;Set display character mode
+0032   2???           00109                 call    LCD_Cmd
+                      00110 
+0033   300C           00111                 movlw   0x0c                    ;Set display on/off and cursor command
+0034   2???           00112                 call    LCD_Cmd                 ;Set cursor off
+                      00113 
+0035   2???           00114                 call    LCD_Clr                 ;clear display
+                      00115 
+0036   3400           00116                 retlw   0x00
+                      00117 
+                      00118 ; command set routine
+0037   00A6           00119 LCD_Cmd         movwf   templcd
+0038   0E26           00120                 swapf   templcd,        w       ;send upper nibble
+0039   390F           00121                 andlw   0x0f                    ;clear upper 4 bits of W
+003A   0085           00122                 movwf   LCD_PORT
+003B   1205           00123                 bcf     LCD_PORT, LCD_RS        ;RS line to 1
+003C   2???           00124                 call    Pulse_e                 ;Pulse the E line high
+                      00125 
+003D   0826           00126                 movf    templcd,        w       ;send lower nibble
+003E   390F           00127                 andlw   0x0f                    ;clear upper 4 bits of W
+003F   0085           00128                 movwf   LCD_PORT
+0040   1205           00129                 bcf     LCD_PORT, LCD_RS        ;RS line to 1
+0041   2???           00130                 call    Pulse_e                 ;Pulse the E line high
+0042   2???           00131                 call    Delay5
+0043   3400           00132                 retlw   0x00
+                      00133 
+0044   3E30           00134 LCD_CharD       addlw   0x30                    ;add 0x30 to convert to ASCII
+0045   00A6           00135 LCD_Char        movwf   templcd
+0046   0E26           00136                 swapf   templcd,        w       ;send upper nibble
+0047   390F           00137                 andlw   0x0f                    ;clear upper 4 bits of W
+0048   0085           00138                 movwf   LCD_PORT
+0049   1605           00139                 bsf     LCD_PORT, LCD_RS        ;RS line to 1
+004A   2???           00140                 call    Pulse_e                 ;Pulse the E line high
+                      00141 
+004B   0826           00142                 movf    templcd,        w       ;send lower nibble
+004C   390F           00143                 andlw   0x0f                    ;clear upper 4 bits of W
+004D   0085           00144                 movwf   LCD_PORT
+004E   1605           00145                 bsf     LCD_PORT, LCD_RS        ;RS line to 1
+004F   2???           00146                 call    Pulse_e                 ;Pulse the E line high
+0050   2???           00147                 call    Delay5
+0051   3400           00148                 retlw   0x00
+                      00149 
+0052   3080           00150 LCD_Line1       movlw   0x80                    ;move to 1st row, first column
+0053   2???           00151                 call    LCD_Cmd
+0054   3400           00152                 retlw   0x00
+                      00153 
+0055   30C0           00154 LCD_Line2       movlw   0xc0                    ;move to 2nd row, first column
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0056   2???           00155                 call    LCD_Cmd
+0057   3400           00156                 retlw   0x00
+                      00157 
+0058   3E80           00158 LCD_Line1W      addlw   0x80                    ;move to 1st row, column W
+0059   2???           00159                 call    LCD_Cmd
+005A   3400           00160                 retlw   0x00
+                      00161 
+005B   3EC0           00162 LCD_Line2W      addlw   0xc0                    ;move to 2nd row, column W
+005C   2???           00163                 call    LCD_Cmd
+005D   3400           00164                 retlw   0x00
+                      00165 
+005E   300D           00166 LCD_CurOn       movlw   0x0d                    ;Set display on/off and cursor command
+005F   2???           00167                 call    LCD_Cmd
+0060   3400           00168                 retlw   0x00
+                      00169 
+0061   300C           00170 LCD_CurOff      movlw   0x0c                    ;Set display on/off and cursor command
+0062   2???           00171                 call    LCD_Cmd
+0063   3400           00172                 retlw   0x00
+                      00173 
+0064   3001           00174 LCD_Clr         movlw   0x01                    ;Clear display
+0065   2???           00175                 call    LCD_Cmd
+0066   3400           00176                 retlw   0x00
+                      00177 
+0067   00A4           00178 LCD_HEX         movwf   tmp1
+0068   0E24           00179                 swapf   tmp1,   w
+0069   390F           00180                 andlw   0x0f
+006A   2???           00181                 call    HEX_Table
+006B   2???           00182                 call    LCD_Char
+006C   0824           00183                 movf    tmp1, w
+006D   390F           00184                 andlw   0x0f
+006E   2???           00185                 call    HEX_Table
+006F   2???           00186                 call    LCD_Char
+0070   3400           00187                 retlw   0x00
+                      00188 
+0071   30FF           00189 Delay255        movlw   0xff            ;delay 255 mS
+0072   2???           00190                 goto    d0
+0073   3064           00191 Delay100        movlw   d'100'          ;delay 100mS
+0074   2???           00192                 goto    d0
+0075   3032           00193 Delay50         movlw   d'50'           ;delay 50mS
+0076   2???           00194                 goto    d0
+0077   3014           00195 Delay20         movlw   d'20'           ;delay 20mS
+0078   2???           00196                 goto    d0
+0079   3005           00197 Delay5          movlw   0x05            ;delay 5.000 ms (4 MHz clock)
+007A   00A1           00198 d0              movwf   count1
+007B   30C7           00199 d1              movlw   0xC7                    ;delay 1mS
+007C   00A2           00200                 movwf   counta
+007D   3001           00201                 movlw   0x01
+007E   00A3           00202                 movwf   countb
+007F                  00203 Delay_0
+007F   0BA2           00204                 decfsz  counta, f
+0080   2???           00205                 goto    $+2
+0081   0BA3           00206                 decfsz  countb, f
+0082   2???           00207                 goto    Delay_0
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00208 
+0083   0BA1           00209                 decfsz  count1  ,f
+0084   2???           00210                 goto    d1
+0085   3400           00211                 retlw   0x00
+                      00212 
+0086   1785           00213 Pulse_e         bsf     LCD_PORT, LCD_E
+0087   0000           00214                 nop
+0088   1385           00215                 bcf     LCD_PORT, LCD_E
+0089   3400           00216                 retlw   0x00
+                      00217 
+                      00218 ;end of LCD routines
+                      00219 
+008A   0782           00220 HEX_Table       ADDWF   PCL       , f
+008B   3430           00221                 RETLW   0x30
+008C   3431           00222                 RETLW   0x31
+008D   3432           00223                 RETLW   0x32
+008E   3433           00224                 RETLW   0x33
+008F   3434           00225                 RETLW   0x34
+0090   3435           00226                 RETLW   0x35
+0091   3436           00227                 RETLW   0x36
+0092   3437           00228                 RETLW   0x37
+0093   3438           00229                 RETLW   0x38
+0094   3439           00230                 RETLW   0x39
+0095   3441           00231                 RETLW   0x41
+0096   3442           00232                 RETLW   0x42
+0097   3443           00233                 RETLW   0x43
+0098   3444           00234                 RETLW   0x44
+0099   3445           00235                 RETLW   0x45
+009A   3446           00236                 RETLW   0x46
+                      00237 
+                      00238 
+009B   0782           00239 Text            addwf   PCL, f
+009C   3431           00240                 retlw   '1'
+009D   3436           00241                 retlw   '6'
+009E   3420           00242                 retlw   ' '
+009F   3442           00243                 retlw   'B'
+00A0   3469           00244                 retlw   'i'
+00A1   3474           00245                 retlw   't'
+00A2   3420           00246                 retlw   ' '
+00A3   3443           00247                 retlw   'C'
+00A4   346F           00248                 retlw   'o'
+00A5   3475           00249                 retlw   'u'
+00A6   346E           00250                 retlw   'n'
+00A7   3474           00251                 retlw   't'
+00A8   3465           00252                 retlw   'e'
+00A9   3472           00253                 retlw   'r'
+00AA   342E           00254                 retlw   '.'
+00AB   3400           00255                 retlw   0x00
+                      00256 
+                      00257 ;This routine downloaded from http://www.piclist.com
+00AC                  00258 Convert:                        ; Takes number in NumH:NumL
+                      00259                                 ; Returns decimal in
+                      00260                                 ; TenK:Thou:Hund:Tens:Ones
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00AC   0E29           00261         swapf   NumH, w
+00AD   38F0           00262         iorlw   B'11110000'
+00AE   00AB           00263         movwf   Thou
+00AF   07AB           00264         addwf   Thou,f
+00B0   3EE2           00265         addlw   0XE2
+00B1   00AC           00266         movwf   Hund
+00B2   3E32           00267         addlw   0X32
+00B3   00AE           00268         movwf   Ones
+                      00269 
+00B4   0829           00270         movf    NumH,w
+00B5   390F           00271         andlw   0X0F
+00B6   07AC           00272         addwf   Hund,f
+00B7   07AC           00273         addwf   Hund,f
+00B8   07AE           00274         addwf   Ones,f
+00B9   3EE9           00275         addlw   0XE9
+00BA   00AD           00276         movwf   Tens
+00BB   07AD           00277         addwf   Tens,f
+00BC   07AD           00278         addwf   Tens,f
+                      00279 
+00BD   0E28           00280         swapf   NumL,w
+00BE   390F           00281         andlw   0X0F
+00BF   07AD           00282         addwf   Tens,f
+00C0   07AE           00283         addwf   Ones,f
+                      00284 
+00C1   0DAD           00285         rlf     Tens,f
+00C2   0DAE           00286         rlf     Ones,f
+00C3   09AE           00287         comf    Ones,f
+00C4   0DAE           00288         rlf     Ones,f
+                      00289 
+00C5   0828           00290         movf    NumL,w
+00C6   390F           00291         andlw   0X0F
+00C7   07AE           00292         addwf   Ones,f
+00C8   0DAB           00293         rlf     Thou,f
+                      00294 
+00C9   3007           00295         movlw   0X07
+00CA   00AA           00296         movwf   TenK
+                      00297 
+                      00298                     ; At this point, the original number is
+                      00299                     ; equal to
+                      00300                     ; TenK*10000+Thou*1000+Hund*100+Tens*10+Ones
+                      00301                     ; if those entities are regarded as two's
+                      00302                     ; complement binary.  To be precise, all of
+                      00303                     ; them are negative except TenK.  Now the number
+                      00304                     ; needs to be normalized, but this can all be
+                      00305                     ; done with simple byte arithmetic.
+                      00306 
+00CB   300A           00307         movlw   0X0A                             ; Ten
+00CC                  00308 Lb1:
+00CC   07AE           00309         addwf   Ones,f
+00CD   03AD           00310         decf    Tens,f
+00CE   1C03           00311         btfss   3,0
+00CF   2???           00312         goto   Lb1
+00D0                  00313 Lb2:
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00D0   07AD           00314         addwf   Tens,f
+00D1   03AC           00315         decf    Hund,f
+00D2   1C03           00316         btfss   3,0
+00D3   2???           00317         goto   Lb2
+00D4                  00318 Lb3:
+00D4   07AC           00319         addwf   Hund,f
+00D5   03AB           00320         decf    Thou,f
+00D6   1C03           00321         btfss   3,0
+00D7   2???           00322         goto   Lb3
+00D8                  00323 Lb4:
+00D8   07AB           00324         addwf   Thou,f
+00D9   03AA           00325         decf    TenK,f
+00DA   1C03           00326         btfss   3,0
+00DB   2???           00327         goto   Lb4
+                      00328 
+00DC   3400           00329         retlw   0x00
+                      00330 
+                      00331 
+                      00332                 end
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE  8
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ADEN                              00000003
+BRGH                              00000002
+C                                 00000000
+C1INV                             00000004
+C1OUT                             00000006
+C2INV                             00000005
+C2OUT                             00000007
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCPR1H                            00000016
+CCPR1L                            00000015
+CIS                               00000003
+CM0                               00000000
+CM1                               00000001
+CM2                               00000002
+CMCON                             0000001F
+CMIE                              00000006
+CMIF                              00000006
+CREN                              00000004
+CSRC                              00000007
+Convert                           000000AC
+DC                                00000001
+Delay100                          00000073
+Delay20                           00000077
+Delay255                          00000071
+Delay5                            00000079
+Delay50                           00000075
+Delay_0                           0000007F
+EEADR                             0000009B
+EECON1                            0000009C
+EECON2                            0000009D
+EEDATA                            0000009A
+EEIE                              00000007
+EEIF                              00000007
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+GIE                               00000007
+HEX_Table                         0000008A
+Hund                              0000002C
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IRP                               00000007
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE  9
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+Initialise                        00000002
+LCD_Char                          00000045
+LCD_CharD                         00000044
+LCD_Clr                           00000064
+LCD_Cmd                           00000037
+LCD_CurOff                        00000061
+LCD_CurOn                         0000005E
+LCD_E                             00000007
+LCD_HEX                           00000067
+LCD_Init                          0000002C
+LCD_Line1                         00000052
+LCD_Line1W                        00000058
+LCD_Line2                         00000055
+LCD_Line2W                        0000005B
+LCD_PORT                          00000005
+LCD_RS                            00000004
+LCD_RW                            00000006
+LCD_TRIS                          00000085
+Lb1                               000000CC
+Lb2                               000000D0
+Lb3                               000000D4
+Lb4                               000000D8
+Message                           0000000D
+NOT_BO                            00000000
+NOT_BOD                           00000000
+NOT_BOR                           00000000
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+Next                              0000002A
+NextMessage                       00000015
+NumH                              00000029
+NumL                              00000028
+OERR                              00000001
+OPTION_REG                        00000081
+OSCF                              00000003
+Ones                              0000002E
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PEIE                              00000006
+PIE1                              0000008C
+PIR1                              0000000C
+PORTA                             00000005
+PORTB                             00000006
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+Pulse_e                           00000086
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE 10
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RBIE                              00000003
+RBIF                              00000000
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RP0                               00000005
+RP1                               00000006
+RX9                               00000006
+RX9D                              00000000
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+STATUS                            00000003
+SYNC                              00000004
+SetPorts                          00000007
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1OSCEN                           00000003
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TMR0                              00000001
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISB                             00000086
+TRMT                              00000001
+TX9                               00000006
+TX9D                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE 11
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TenK                              0000002A
+Tens                              0000002D
+Text                              0000009B
+Thou                              0000002B
+VR0                               00000000
+VR1                               00000001
+VR2                               00000002
+VR3                               00000003
+VRCON                             0000009F
+VREN                              00000007
+VROE                              00000006
+VRR                               00000005
+W                                 00000000
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+Z                                 00000002
+_.org_0_0080                      00000080
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+_CP_50                            00002BFF
+_CP_75                            000017FF
+_CP_ALL                           000003FF
+_CP_OFF                           00003FFF
+_DATA_CP_OFF                      00003FFF
+_DATA_CP_ON                       00003EFF
+_ER_OSC_CLKOUT                    00003FFF
+_ER_OSC_NOCLKOUT                  00003FFE
+_EXTCLK_OSC                       00003FEF
+_HS_OSC                           00003FEE
+_INTRC_OSC_CLKOUT                 00003FFD
+_INTRC_OSC_NOCLKOUT               00003FFC
+_LP_OSC                           00003FEC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_MCLRE_OFF                        00003FDF
+_MCLRE_ON                         00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_XT_OSC                           00003FED
+__16F84A                          00000001
+count                             00000020
+count1                            00000021
+counta                            00000022
+countb                            00000023
+d0                                0000007A
+d1                                0000007B
+templcd                           00000026
+templcd2                          00000027
+tmp1                              00000024
+tmp2                              00000025
+MPASM  5.20                        TUT3_2.ASM   9-4-2009  13:58:43         PAGE 12
+
+
+
+
+
+
+Errors   :     0
+Warnings :     1 reported,     0 suppressed
+Messages :     1 reported,     1 suppressed
+
+
